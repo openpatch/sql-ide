@@ -1,4 +1,4 @@
-let base = "https://embed.learn-sql.de/include/";
+let base = "https://sqlide2.openpatch.org/";
 
 
 let scripts = [
