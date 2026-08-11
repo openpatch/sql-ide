@@ -24,6 +24,7 @@ import { EmbeddedSlider } from "./EmbeddedSlider.js";
 import { JOScript } from "./EmbeddedStarter.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
 import { ThemeManager } from "../main/gui/ThemeManager.js";
+import { followPageTheme, PageTheme, pageTheme } from "./PageTheme.js";
 
 import gridUrl from '/include/graphics/grid.svg';
 
@@ -39,14 +40,19 @@ type JavaOnlineConfig = {
     enableFileAccess?: boolean,
 
     /**
-     * "dark" (the default) or "light" - the same two themes the full IDE offers
-     * under Einstellungen. Anything else falls back to "dark".
+     * "dark" or "light" - the same two themes the full IDE offers under
+     * Einstellungen.
+     *
+     * Left out, the IDE takes the theme from the page: a hyperbook has a
+     * `<dark-mode-toggle>` its reader can flip, and the IDE follows it, live
+     * (see PageTheme.ts). A page without such a toggle says nothing about its
+     * colours, and the IDE stays dark, as embedded IDEs have always been.
      *
      * The theme's colours are custom properties on the document root, so they
      * are the page's rather than one IDE's: where a page holds several embedded
      * IDEs they all end up in the theme of the one that was initialised last.
      */
-    theme?: "dark" | "light",
+    theme?: PageTheme,
 }
 
 export class MainEmbedded implements MainBase {
@@ -160,6 +166,8 @@ export class MainEmbedded implements MainBase {
 
     /** Owns this IDE's colours; see the `theme` config option. */
     themeManager: ThemeManager;
+    /** True while no theme was configured, so the page's toggle decides. */
+    private themeFollowsPage: boolean = false;
 
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
@@ -170,6 +178,7 @@ export class MainEmbedded implements MainBase {
         // wrong colours first
         this.themeManager = new ThemeManager();
         this.themeManager.switchTheme(this.config.theme!);
+        if (this.themeFollowsPage) followPageTheme(theme => this.applyTheme(theme));
 
         this.writeQueryManager = new WriteQueryManager(this, (this.config.databaseURL == null ? "Empty database" : this.config.databaseURL) + this.config.id);
 
@@ -243,6 +252,13 @@ export class MainEmbedded implements MainBase {
     }
 
 
+    /** Re-theme on the fly when the reader flips the page's dark-mode toggle. */
+    private applyTheme(theme: PageTheme) {
+        if (theme == this.config.theme) return;
+        this.config.theme = theme;
+        this.themeManager.switchTheme(theme);
+    }
+
     readConfig($div: JQuery<HTMLElement>) {
         let configJson: string | object = $div.data("sql-online");
         if (configJson != null && typeof configJson == "string") {
@@ -256,8 +272,11 @@ export class MainEmbedded implements MainBase {
         if (this.config.withErrorList == null) this.config.withErrorList = true;
         if (this.config.withBottomPanel == null) this.config.withBottomPanel = true;
 
-        // a misspelt theme should leave the IDE readable rather than half-styled
-        if (this.config.theme != "light") this.config.theme = "dark";
+        // A theme named in the config wins; otherwise the page says which one it
+        // is in and the IDE follows. A misspelt name counts as "not named" - that
+        // leaves the IDE readable rather than half-styled.
+        this.themeFollowsPage = this.config.theme != "light" && this.config.theme != "dark";
+        if (this.themeFollowsPage) this.config.theme = pageTheme() ?? "dark";
 
         if (!(this.config.withOutput || this.config.withFileList || this.config.withErrorList)) {
             this.config.withBottomPanel = false;
