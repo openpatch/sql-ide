@@ -144,6 +144,13 @@ export class ThemeManager {
                 // highlight statements
                 "--highlightStatementGreen-color": "#015a0165",
 
+                // icons: the sprites are drawn for this theme already, so this
+                // is a no-op - but it has to be a filter function rather than
+                // `none`, which is not allowed in a list and would make
+                // `none grayscale()` invalid and drop the whole declaration
+                "--icon-filter": "brightness(1)",
+                "--icon-filter-hover": "brightness(150%)",
+
 
             }
         });
@@ -244,6 +251,14 @@ export class ThemeManager {
 
                 // highlight statements
                 "--highlightStatementGreen-color": "#015a0120",
+
+                // The icon sprites are light glyphs meant for a dark panel and
+                // there are no light-theme counterparts, so they are darkened
+                // here instead: enough contrast on white for the plain grey
+                // ones, and saturation put back so the coloured ones stay
+                // themselves. Highlighting goes darker rather than brighter.
+                "--icon-filter": "brightness(0.45) saturate(1.6)",
+                "--icon-filter-hover": "brightness(0.75)",
 
             }
         });
