@@ -10,6 +10,7 @@ import { MainBase } from "../MainBase.js";
 import { Helper } from "./Helper.js";
 import jQuery from "jquery";
 import * as monaco from 'monaco-editor'
+import { ThemeManager } from "./ThemeManager.js";
 
 
 export class Editor {
@@ -143,7 +144,7 @@ export class Editor {
                 vertical: 'auto',
                 horizontal: 'auto'
             },
-            theme: "myCustomThemeDark",
+            theme: ThemeManager.currentMonacoTheme,
             // automaticLayout: true
 
 

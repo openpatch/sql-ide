@@ -23,6 +23,7 @@ import { OnlineIDEAccessImpl } from "./EmbeddedInterface.js";
 import { EmbeddedSlider } from "./EmbeddedSlider.js";
 import { JOScript } from "./EmbeddedStarter.js";
 import { WriteQueryManager } from "./WriteQueryManager.js";
+import { ThemeManager } from "../main/gui/ThemeManager.js";
 
 import gridUrl from '/include/graphics/grid.svg';
 
@@ -35,7 +36,17 @@ type JavaOnlineConfig = {
     withBottomPanel?: boolean,
     id?: string,
     databaseURL?: string,
-    enableFileAccess?: boolean
+    enableFileAccess?: boolean,
+
+    /**
+     * "dark" (the default) or "light" - the same two themes the full IDE offers
+     * under Einstellungen. Anything else falls back to "dark".
+     *
+     * The theme's colours are custom properties on the document root, so they
+     * are the page's rather than one IDE's: where a page holds several embedded
+     * IDEs they all end up in the theme of the one that was initialised last.
+     */
+    theme?: "dark" | "light",
 }
 
 export class MainEmbedded implements MainBase {
@@ -147,9 +158,18 @@ export class MainEmbedded implements MainBase {
     initialTemplateDump: Uint8Array;
     initialStatements: string[];
 
+    /** Owns this IDE's colours; see the `theme` config option. */
+    themeManager: ThemeManager;
+
     constructor($div: JQuery<HTMLElement>, private scriptList: JOScript[]) {
 
         this.readConfig($div);
+
+        // after readConfig, because which theme this is comes out of the config;
+        // before initGUI, so the elements it builds are never painted in the
+        // wrong colours first
+        this.themeManager = new ThemeManager();
+        this.themeManager.switchTheme(this.config.theme!);
 
         this.writeQueryManager = new WriteQueryManager(this, (this.config.databaseURL == null ? "Empty database" : this.config.databaseURL) + this.config.id);
 
@@ -235,6 +255,9 @@ export class MainEmbedded implements MainBase {
         if (this.config.withOutput == null) this.config.withOutput = true;
         if (this.config.withErrorList == null) this.config.withErrorList = true;
         if (this.config.withBottomPanel == null) this.config.withBottomPanel = true;
+
+        // a misspelt theme should leave the IDE readable rather than half-styled
+        if (this.config.theme != "light") this.config.theme = "dark";
 
         if (!(this.config.withOutput || this.config.withFileList || this.config.withErrorList)) {
             this.config.withBottomPanel = false;
