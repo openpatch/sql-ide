@@ -25,6 +25,13 @@ export type JOScript = {
     type: ScriptType;
     title: string;
     text: string;
+    /**
+     * A file the author of a page hid: it stays in the workspace, but the
+     * file explorer never shows it, so readers cannot open, edit or delete
+     * it. Set through data-online-ide='{"hidden": true}' on the script tag,
+     * the same way the Online-IDE embedded reads it.
+     */
+    hidden?: boolean;
 }
 
 function initMonacoEditor(): void {
@@ -104,6 +111,10 @@ export class EmbeddedStarter {
                     title: $script.attr('title'),
                     text: $script.text().trim()
                 };
+                if ($script.data('online-ide')) {
+                    let data: string = $script.data('online-ide');
+                    script = Object.assign(script, JSON.parse(data.replaceAll("'", '"')));
+                }
                 scriptList.push(script);
             });
 

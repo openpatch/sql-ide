@@ -244,7 +244,7 @@ export class MainEmbedded implements MainBase {
         if (this.config.withFileList) {
             this.fileExplorer = new EmbeddedFileExplorer(this.currentWorkspace.moduleStore, this.$filesListDiv, this);
             this.fileExplorer.setFirstFileActive();
-            this.scriptList.filter((script) => script.type == "hint").forEach((script) => this.fileExplorer.addHint(script));
+            this.scriptList.filter((script) => script.type == "hint" && !script.hidden).forEach((script) => this.fileExplorer.addHint(script));
         } else {
             this.setModuleActive(this.currentWorkspace.moduleStore.getFirstModule());
         }
@@ -362,7 +362,9 @@ export class MainEmbedded implements MainBase {
                                 type: "sql"
                             });
 
-                            that.fileExplorer?.addModule(module);
+                            module.hidden = that.isHiddenScript(name);
+
+                            if (!module.hidden) that.fileExplorer?.addModule(module);
                             that.$codeResetButton.fadeIn(1000);
 
                             // console.log("Retrieving script " + scriptId);
@@ -466,6 +468,8 @@ export class MainEmbedded implements MainBase {
 
         this.currentWorkspace.moduleStore.putModule(module);
 
+        module.hidden = script.hidden || false;
+
         let that = this;
 
         module.model.onDidChangeContent(() => {
@@ -477,6 +481,10 @@ export class MainEmbedded implements MainBase {
 
     removeModule(module: Module) {
         this.currentWorkspace.moduleStore.removeModule(module);
+    }
+
+    isHiddenScript(identifier: string): boolean {
+        return this.scriptList.some(script => script.title === identifier && script.hidden);
     }
 
 

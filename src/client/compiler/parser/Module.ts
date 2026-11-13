@@ -79,6 +79,13 @@ export class Module {
 
     completionHints: Map<number, CompletionHint[]> = new Map(); // Map from line numbers to hints
 
+    /**
+     * A file the author of the embedding page hid: it stays in the workspace,
+     * but the file explorer never shows it, so readers cannot open, edit or
+     * delete it. See JOScript.hidden.
+     */
+    hidden: boolean = false;
+
     constructor(file: File, public main: MainBase) {
         if (file == null || this.main == null) return; // used by AdhocCompiler and ApiDoc
 

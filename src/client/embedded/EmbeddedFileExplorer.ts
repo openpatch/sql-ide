@@ -24,6 +24,8 @@ export class EmbeddedFileExplorer {
 
         for (let module of moduleStore.getModules(false)) {
 
+            if (module.hidden) continue;
+
             this.addModule(module);
 
         }
